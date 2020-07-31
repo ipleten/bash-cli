@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq
+#kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq
+echo -e "test\none\ntwo"
