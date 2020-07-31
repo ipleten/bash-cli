@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+if [[ $# -eq 0 ]]
+then
+    RESULT=$(basename $(git rev-parse --show-toplevel))
+    if [[ $? -eq 0 ]]
+    then
+        echo "Got service name from git $RESULT"
+        echo "Note: '-l app.name=$RESULT' will be using as label"
+        SERVICE_NAME=$RESULT
+        echo $CMD
+    else
+        SERVICE_NAME=$(kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq | fzf)
+    fi
+elif [[ $# -gt 0 ]]
+then
+    SERVICE_NAME=$1
+fi
+
+CMD="stern -l app.name=$SERVICE_NAME --tail 10"
+echo "Running '$CMD'"
+stern -l app.name=$SERVICE_NAME --tail 10
+
+

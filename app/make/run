@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+COMPREPLY="check one two"
+
+echo -e "\033[36mTODO\033[39m: I'm run"
+
