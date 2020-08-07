@@ -1,3 +1,12 @@
 #!/usr/bin/env bash
+#. ./app//make/local.complete
+#pwd
 echo -e "\033[36mTODO\033[39m: Im local"
 cli make run
+echo "$@"
+POD=$(kubectl get pods -l app.name=$1 --field-selector=status.phase=Running  -o=name | fzf -0 -1 --prompt "Select Pod:")
+shift
+
+CMD="kubectl exec  -it $POD ${@:-"/bin/bash"}"
+echo "Running: $CMD"
+exec $CMD

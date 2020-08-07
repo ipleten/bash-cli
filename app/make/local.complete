@@ -1,3 +1,11 @@
 #!/usr/bin/env bash
-#kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq
-echo -e "test\none\ntwo"
+# echo $curr_arg
+# set -- ${COMP_WORDS[@]}
+# echo $*
+# #echo $1
+# #kubectl get pods -l app.name="$1" | sort | uniq
+echo -e "test\none\ntwo\newr"
+echo -e "arguments\n" $@
+#set | grep COMP
+#kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq #| fzf --prompt="Label:> "
+#echo "test test test" | fzf --prompt="Label:> "

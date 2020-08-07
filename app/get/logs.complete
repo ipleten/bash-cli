@@ -1,0 +1,14 @@
+#!/bin/bash
+#kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq #| fzf --prompt="Label:> "
+
+echo -e "Ruslan\nGuk\nolol"
+#echo -e "arguments\n" ${COMP_WORDS[@]:${cmd_arg_start}}
+# local_args=${COMP_WORDS[@]:${cmd_arg_start}}
+# if [[ -n $local_args ]];
+# then
+#     #echo  $local_args
+#     echo "I'm here here is arguments"
+# else
+# echo "--hell"
+# fi
+
