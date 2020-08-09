@@ -9,4 +9,5 @@ function _bash_cli() {
     . "$root_dir/bash-cli.inc.sh"
 
     bcli_bash_completions
+  #  bcli_bash_comp
 }

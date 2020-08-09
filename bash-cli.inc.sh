@@ -211,35 +211,57 @@ function bcli_bash_completions() {
 
         cmd_file="$cmd_file/${COMP_WORDS[cmd_arg_start]}"
         cmd_arg_start=$((cmd_arg_start+1))
+        debug_me "im in while:" $cmd_file $cmd_arg_start
     done
 
     # If we've found something which doesn't exist, then let's
     # look at its containing directory for info.
     if [[ ! -e "$cmd_file" ]]; then
         cmd_file=$(dirname "$cmd_file")
+        debug_me 'Its something we cannot find, set parent dirname as  a cmd_file'
     fi
+
+        debug_me "Args=basename?"
+        if [[ $curr_arg = $(basename $cmd_file) ]]; then
+            COMPREPLY=($(basename $cmd_file))
+            debug_me  "Yes it is" "$(basename $cmd_file)"
+            return
+        fi
 
     # If we found a command, then suggest the `--help` argument
     # TODO: Add parsing of .usage files for this
     if [[ -f "$cmd_file" ]]; then
+
         # Check if we've already got a `--help`, don't output anything
         # if we do.
         for i in $(seq $cmd_arg_start "$COMP_CWORD"); do
             if [[ "${COMP_WORDS[$i]}" == "--help" ]]; then
                 COMPREPLY=()
+                debug_me "If we have no more suggestions after. "
                 return
             fi
         done
         if [ -f "${cmd_file}.complete" ]; then
         # shellcheck disable=SC2207 # Using this as alternatives are not cross-platform or introduce dependencies
-            #COMPREPLY=($(compgen -W "$(source ${cmd_file}.complete | fzf )" -- "$curr_arg") )
-            COMPREPLY=($(source ${cmd_file}.complete) )
+            #COMPREPLY=($(compgen -W "$(source ${cmd_file}.complete)" -- "$curr_arg" | fzf -0 ) )
+            COMPREPLY=($(compgen -W "$(source ${cmd_file}.complete)" -- "$curr_arg" ) )
+            debug_me "I'm your crappy complete"
+           # COMPREPLY=($(source ${cmd_file}.complete | fzf  ) )
         else
-        COMPREPLY=($(compgen -W "--help" -- "$curr_arg"))
+            COMPREPLY=($(compgen -W '--help' -- "$curr_arg"))
+            debug_me "I should show help but not for sure"
+            return
         fi
     # If we found a directory, then show all the commands which are
     # available within it, as well as the `help` virtual command.
     elif [ -d "$cmd_file" ]; then
+
+        # debug_me "I'm before if to check args"
+        # if [[ $curr_arg = $(basename $cmd_file) ]]; then
+        #     COMPREPLY=($(basename $cmd_file))
+        #     debug_me "$(basename $cmd_file)"
+        #     return
+        # fi
         local opts=("help")
         while IFS= read -d $'\0' -r file ; do
             # shellcheck disable=SC2207 # Using this as alternatives are not cross-platform or introduce dependencies
@@ -250,5 +272,72 @@ function bcli_bash_completions() {
         "
         # shellcheck disable=SC2207 # Using this as alternatives are not cross-platform or introduce dependencies
         COMPREPLY=($(compgen -W "$(printf '%s\n' "${opts[@]}")" -- "$curr_arg"))
+        debug_me 'Im in dir and the last'
     fi
 }
+
+
+function join_by {
+    local IFS="$1"; shift; echo "$*";
+    }
+
+
+function bcli_bash_comp() {
+    local word="${COMP_WORDS[COMP_CWORD]}"
+    #return
+    local root_dir;
+    root_dir=
+    root_dir=$(dirname "$(bcli_resolve_path "$(which "${COMP_WORDS[0]}")")")
+
+    if [[ $COMP_CWORD -eq '1' ]]; then
+    # CLI has no arguments
+        COMPREPLY=('help')
+        COMPREPLY+=($(command_list "${root_dir}/app"))
+        debug_me "IM in first argument"
+        return
+    fi
+
+    a=$(join_by / $root_dir/app ${COMP_WORDS[@]:1})
+    #echo ${COMP_WORDS[@]}
+
+    list=$(command_list $a)
+    debug_me ${list[@]} "list:"
+    if [[ ! -e "${a}" ]]; then
+       list=$(command_list $(dirname "${a}"))
+       debug_me $list "File not found, using dir of command"
+    fi
+
+    if [[ -f "$a" ]] && [[ $COMP_CWORD -ge 1 ]]; then
+        COMPREPLY=($(basename "$a"))
+        debug_me "FILE found use basename"
+        return
+    else
+        COMPREPLY=($(compgen -W "$list" -- "$word"))
+        debug_me "Assuming it's a dir so get list of all files in it."
+    fi
+}
+
+function join_by {
+    local IFS="$1"; shift; echo "$*";
+    }
+
+function command_list {
+    local cmd_file
+    cmd_file=${1:-''}
+    join_by  " " $(find "$cmd_file"/ -maxdepth 1 ! -path "$cmd_file"/ ! -iname '*.*'  -exec basename {} \;)
+}
+
+function debug_me {
+    echo $@
+    echo "curr_arg:" ${curr_arg}
+    echo "cmd_file:" ${cmd_file}
+    echo "cmd_arg_start:" ${cmd_arg_start}
+    echo "COMP_CWORD:" $COMP_CWORD
+    echo "COMP_POINT:" $COMP_POINT
+    echo "COMP_LINE:" $COMP_LINE
+    echo "COMP_LINE#:" ${#COMP_LINE}
+    echo "COMP_KEY:" $COMP_KEY
+    echo "COMP_WORDS:" ${COMP_WORDS[@]}
+    echo "COMPREPLY:" ${COMPREPLY[@]}
+    echo
+} >> ~/com.debug
