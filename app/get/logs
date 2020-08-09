@@ -1,30 +1,36 @@
 #!/usr/bin/env bash
+# Show logs
+
 
 if [[ $# -eq 0 ]]
 then
+    # Is it git repo?
+    # If yes use repo name as Label
     RESULT=$(basename $(git rev-parse --show-toplevel))
     if [[ $? -eq 0 ]]
     then
         echo "Got service name from git $RESULT"
-        echo "Note: '-l app.name=$RESULT' will be using as label"
-        SERVICE_NAME=$RESULT
+        SELECTOR="-l app.name=$RESULT"
+        echo "Note: '$SELECTOR' will be using as label"
         echo $CMD
     else
+        # Suggest selector if it's not a git repo
+        # TODO add cache and check it if name in list
         SERVICE_NAME=$(kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq | fzf)
     fi
-elif [[ $# -gt 0 ]]
-then
-    SERVICE_NAME=$1
-fi
-if [[ $2 ==  '--select-pods' ]]
-then
-echo " selet"
-POD=$(kubectl get pods -l app.name=$SERVICE_NAME -o name | fzf)
+# Use first argument as label name
+elif [[ $# -eq 1 ]];then
+    SELECTOR="-l app.name=$1"
+    shift
+else
+    # Gettigng logs from one pod. Pod name is a second argument
+    SELECTOR=$2
+    shift 2
 fi
 
 
-CMD="stern ${POD:-"-l app.name=$SERVICE_NAME"} --tail 10"
+CMD="stern $SELECTOR ${@:-"--tail 10"}"
 echo "Running '$CMD'"
-stern -l app.name=$SERVICE_NAME --tail 10
+exec $CMD
 
 

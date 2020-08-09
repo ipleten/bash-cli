@@ -1,22 +1,37 @@
 #!/bin/bash
-#kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq #| fzf --prompt="Label:> "
+#TODO: ADD CACHE for Labels
+
+function _fzf() {
+    fzf -0 -1 --no-sort $filter $@
+}
 
 filter=""
 if [[ -n $curr_arg ]]; then
     filter="-q $curr_arg"
 fi
 
-echo -e "R\nRuslan\nGuk\nolol" | fzf -0 -1 $filter
-# set >> ~/com.debug.local_args
-# env >>
-#echo -e "arguments\n" ${COMP_WORDS[@]:${cmd_arg_start}}
-local_args=${COMP_WORDS[@]:${cmd_arg_start}}
-echo $local_args >> ~/com.debug.local_args
-# if [[ -n $local_args ]];
-# then
-#     #echo  $local_args
-#     echo "I'm here here is arguments"
-# else
-# echo "--hell"
-# fi
+local_args_array=(${COMP_WORDS[@]:${cmd_arg_start}})
+echo ${#local_args_array[@]} ${local_args_array[@]}  >> ~/com.debug.local_args_array
+
+#if [[ ${#local_args_array[@]} -le 1 ]]; then
+if [[ $COMP_CWORD  -eq $cmd_arg_start ]]; then
+    debug_me "Select labels"
+    kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq | _fzf --prompt="Label:> "
+else
+    debug_me "select pods" app.name=${local_args_array[0]}
+    kubectl get pods -l app.name=${local_args_array[0]} -o name  |cut -f2 -d "/" | fzf -0 -1 --prompt="Select pod for $1" $filter
+fi
+
+# # set >> ~/com.debug.local_args_array
+# # env >>
+# #echo -e "arguments\n" ${COMP_WORDS[@]:${cmd_arg_start}}
+# local_args_array=${COMP_WORDS[@]:${cmd_arg_start}}
+#echo $local_args_array >> ~/com.debug.local_args_array
+# # if [[ -n $local_args_array ]];
+# # then
+# #     #echo  $local_args_array
+# #     echo "I'm here here is arguments"
+# # else
+# # echo "--hell"
+# # fi
 
