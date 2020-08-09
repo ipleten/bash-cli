@@ -2,13 +2,11 @@
 # Show logs
 
 
-if [[ $# -eq 0 ]]
-then
+if [[ $# -eq 0 ]] || [[ $1 = '--'* ]]; then
     # Is it git repo?
     # If yes use repo name as Label
-    RESULT=$(basename $(git rev-parse --show-toplevel))
-    if [[ $? -eq 0 ]]
-    then
+    RESULT=$(basename $(git rev-parse --show-toplevel 2> /dev/null) 2> /dev/null)
+    if [[ $? -eq 0 ]]; then
         echo "Got service name from git $RESULT"
         SELECTOR="-l app.name=$RESULT"
         echo "Note: '$SELECTOR' will be using as label"
@@ -17,6 +15,7 @@ then
         # Suggest selector if it's not a git repo
         # TODO add cache and check it if name in list
         SERVICE_NAME=$(kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq | fzf)
+        SELECTOR="-l app.name=$SERVICE_NAME"
     fi
 # Use first argument as label name
 elif [[ $# -eq 1 ]];then
