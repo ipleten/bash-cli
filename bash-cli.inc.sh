@@ -327,17 +327,17 @@ function command_list {
     join_by  " " $(find "$cmd_file"/ -maxdepth 1 ! -path "$cmd_file"/ ! -iname '*.*'  -exec basename {} \;)
 }
 
-function debug_me {
-    echo $@
-    echo "curr_arg:" ${curr_arg}
-    echo "cmd_file:" ${cmd_file}
-    echo "cmd_arg_start:" ${cmd_arg_start}
-    echo "COMP_CWORD:" $COMP_CWORD
-    echo "COMP_POINT:" $COMP_POINT
-    echo "COMP_LINE:" $COMP_LINE
-    echo "COMP_LINE#:" ${#COMP_LINE}
-    echo "COMP_KEY:" $COMP_KEY
-    echo "COMP_WORDS:" ${COMP_WORDS[@]}
-    echo "COMPREPLY:" ${COMPREPLY[@]}
-    echo
-} >> ~/com.debug
+    function debug_me {
+        echo $@
+        echo "curr_arg:" ${curr_arg}
+        echo "cmd_file:" ${cmd_file}
+        echo "cmd_arg_start:" ${cmd_arg_start}
+        echo "COMP_CWORD:" $COMP_CWORD
+        echo "COMP_POINT:" $COMP_POINT
+        echo "COMP_LINE:" $COMP_LINE
+        echo "COMP_LINE#:" ${#COMP_LINE}
+        echo "COMP_KEY:" $COMP_KEY
+        echo "COMP_WORDS:" ${COMP_WORDS[@]}
+        echo "COMPREPLY:" ${COMPREPLY[@]}
+        echo
+    } >> ~/com.debug

@@ -1,0 +1,50 @@
+#!/bin/bash
+USE_FZF=yup
+
+# TODO MOVE these to common funtions:
+function _fzf() {
+    if [[ -n $USE_FZF ]]; then
+        exec fzf -0 -1 --no-sort "$@" $filter
+    else
+        cat
+    fi
+}
+
+# Simple output cache function:
+# return cache if it less than 1 hr otherwise run command and update cache.
+function _cache() {
+    HASH=$(echo "$@" | md5 )
+    CACHE_FILE="/tmp/${HASH}"
+    if [[ ! -e $CACHE_FILE ]] ||  [[ $(($(date +%s)-$(date -r "$CACHE_FILE" +%s))) -ge 3600 ]]; then
+        RESULT=$(eval "$@")
+        echo "$RESULT" > /tmp/"$HASH"
+    fi
+    cat "$CACHE_FILE"
+}
+
+function get_labels() {
+    _cache  'kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq'
+}
+
+# Using filter for fzf if used.
+# It will pre-select options based on input.
+filter=""
+if [[ -n $curr_arg ]]; then
+    filter="-q ^$curr_arg"
+fi
+
+# Get all argument after command.
+local_args_array=("${COMP_WORDS[@]:${cmd_arg_start}}")
+
+# If we have one argument suggest labels
+if [[ $COMP_CWORD  -eq $cmd_arg_start ]]; then
+    debug_me "Select labels"
+    get_labels | _fzf --prompt="Select app.name label:> "
+# If we have two arguments suggest pod
+elif [[ $(($COMP_CWORD-$cmd_arg_start)) -eq 1 ]]; then
+    debug_me "select pods" app.name=${local_args_array[0]}
+    kubectl get pods -l app.name=${local_args_array[0]} -o name  |cut -f2 -d "/" | _fzf --prompt='Choose pod:>'
+else
+# We don't need to suggest more than two arguments
+    echo ""
+fi

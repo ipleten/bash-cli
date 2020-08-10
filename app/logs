@@ -1,6 +1,28 @@
 #!/usr/bin/env bash
 # Show logs
+USE_FZF=${USE_FZF:-"true"}
 
+function _fzf() {
+    if [[ $USE_FZF = "true" ]]; then
+        exec fzf -0 -1 --no-sort "$@" $filter
+    else
+        cat
+    fi
+}
+
+function _cache() {
+    HASH=$(echo "$@" | md5 )
+    CACHE_FILE="/tmp/${HASH}"
+    if [[ ! -e $CACHE_FILE ]] ||  [[ $(($(date +%s)-$(date -r "$CACHE_FILE" +%s))) -ge 3600 ]]; then
+        RESULT=$(eval "$@")
+        echo "$RESULT" > /tmp/"$HASH"
+    fi
+    cat "$CACHE_FILE"
+}
+
+function get_labels() {
+    _cache  'kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq'
+}
 
 if [[ $# -eq 0 ]] || [[ $1 = '--'* ]]; then
     # Is it git repo?
@@ -14,7 +36,7 @@ if [[ $# -eq 0 ]] || [[ $1 = '--'* ]]; then
     else
         # Suggest selector if it's not a git repo
         # TODO add cache and check it if name in list
-        SERVICE_NAME=$(kubectl get pods -o=custom-columns="D:metadata.labels.app\.name" --no-headers | sort | uniq | fzf)
+        SERVICE_NAME=$(get_labels | _fzf --prompt="Select app.name label vaule:>")
         SELECTOR="-l app.name=$SERVICE_NAME"
     fi
 # Use first argument as label name
@@ -26,7 +48,6 @@ else
     SELECTOR=$2
     shift 2
 fi
-
 
 CMD="stern $SELECTOR ${@:-"--tail 10"}"
 echo "Running '$CMD'"
