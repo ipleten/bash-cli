@@ -35,14 +35,11 @@ fi
 
 # Get all argument after command.
 local_args_array=("${COMP_WORDS[@]:${cmd_arg_start}}")
-
 # If we have one argument suggest labels
 if [[ $COMP_CWORD  -eq $cmd_arg_start ]]; then
-    debug_me "Select labels"
     get_labels | _fzf --prompt="Select app.name label:> "
 # If we have two arguments suggest pod
 elif [[ $(($COMP_CWORD-$cmd_arg_start)) -eq 1 ]]; then
-    debug_me "select pods" app.name=${local_args_array[0]}
     kubectl get pods -l app.name=${local_args_array[0]} -o name  |cut -f2 -d "/" | _fzf --prompt='Choose pod:>'
 else
 # We don't need to suggest more than two arguments

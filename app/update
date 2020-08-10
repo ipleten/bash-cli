@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+root_dir=/Users/iaroslavpleten/github/bash-cli/
+cd $root_dir
+git status
