@@ -1,6 +1,9 @@
 #!/bin/bash
 USE_FZF=yup
 
+set +e
+set -o pipefail
+
 # TODO MOVE these to common funtions:
 function _fzf() {
     if [[ -n $USE_FZF ]]; then

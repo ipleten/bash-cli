@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Show logs
 USE_FZF=${USE_FZF:-"true"}
+set -e
+set -o pipefail
 
 function _fzf() {
     if [[ $USE_FZF = "true" ]]; then
@@ -14,7 +16,7 @@ function _cache() {
     HASH=$(echo "$@" | md5 )
     CACHE_FILE="/tmp/${HASH}"
     if [[ ! -e $CACHE_FILE ]] ||  [[ $(($(date +%s)-$(date -r "$CACHE_FILE" +%s))) -ge 3600 ]]; then
-        RESULT=$(eval "$@")
+        RESULT=$(set -o pipefail; eval "$@")
         echo "$RESULT" > /tmp/"$HASH"
     fi
     cat "$CACHE_FILE"
